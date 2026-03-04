@@ -1,5 +1,5 @@
 """
-slides_builder.py
+md2ppt.py
 -----------------
 Converts a Markdown string into a .pptx file using python-pptx.
 
@@ -19,7 +19,7 @@ Usage (as a module)
 
 Usage (CLI)
 -----------
-  python slides_builder.py input.md output.pptx
+  python md2ppt.py input.md output.pptx
 """
 
 import re
