@@ -9,7 +9,7 @@ description = "Convert Markdown files into PowerPoint presentations (.pptx)"
 readme = "README.rst"
 license = { text = "MIT" }
 authors = [
-    { name = "ETSU Department of Computing", email = "computing@etsu.edu" },
+    { name = "Ryan Haas" },
 ]
 keywords = ["markdown", "powerpoint", "pptx", "presentation", "slides"]
 classifiers = [
@@ -32,8 +32,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/etsu-computing/md2ppt"
-"Bug Tracker" = "https://github.com/etsu-computing/md2ppt/issues"
+Homepage = "https://github.com/haasr/md2ppt"
+"Bug Tracker" = "https://github.com/haasr/md2ppt/issues"
 
 [project.scripts]
 md2ppt = "md2ppt.__main__:main"
