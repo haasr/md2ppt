@@ -1,29 +1,24 @@
 """
-md2ppt.py
+md2ppt
 -----------------
 Converts a Markdown string into a .pptx file using python-pptx.
 
 Markdown conventions
 --------------------
-  # Title                   → Title slide (title only)
-  # Title: Subtitle         → Title slide (split on first colon)
-  ## Slide Title            → Content slide title
-  Paragraphs under ##       → Plain text body items (no bullet)
-  - Bullet items under ##   → Bulleted list items
-  1. Numbered items under ## → Hanging-indent numbered plain text
+  # Title                    --> Title slide (title only)
+  # Title: Subtitle          --> Title slide (split on first colon)
+  ## Slide Title             --> Content slide title
+  Paragraphs under ##        --> Plain text body items (no bullet)
+  - Bullet items under ##    --> Bulleted list items
+  1. Numbered items under ## --> Hanging-indent numbered plain text
 
 Usage (as a module)
 -------------------
   builder = SlidesBuilder(markdown_text, "output.pptx")
   builder.build()
-
-Usage (CLI)
------------
-  python md2ppt.py input.md output.pptx
 """
 
 import re
-import sys
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -33,12 +28,12 @@ from pptx.util import Inches, Pt
 from pptx.enum.text import PP_ALIGN, MSO_AUTO_SIZE
 
 
-# ── Layout indices ─────────────────────────────────────────────────────────────
-_LAYOUT_TITLE_SLIDE   = 0   # "Title Slide"       – big title + subtitle
-_LAYOUT_TITLE_CONTENT = 1   # "Title and Content" – title + body placeholder
+# -- Layout indices -------------------------------------------------------------
+_LAYOUT_TITLE_SLIDE   = 0   # "Title Slide"       - big title + subtitle
+_LAYOUT_TITLE_CONTENT = 1   # "Title and Content" - title + body placeholder
 
 
-# ── Data classes ───────────────────────────────────────────────────────────────
+# -- Data classes ---------------------------------------------------------------
 
 @dataclass
 class SlideItem:
@@ -64,7 +59,7 @@ class SlideData:
     items:    list            = field(default_factory=list)
 
 
-# ── Main class ─────────────────────────────────────────────────────────────────
+# -- Main class -----------------------------------------------------------------
 
 class SlidesBuilder:
     """
@@ -90,19 +85,19 @@ class SlidesBuilder:
             accent1, accent2, accent3, accent4, accent5, accent6,
             hlink, folHlink
 
-        Example — ETSU palette::
- 
+        Example - ETSU palette::
+
             theme_colors = {
-                "dk1":     "000000",   # Body text — black
-                "lt1":     "FFFFFF",   # Slide background — white
+                "dk1":     "000000",   # Body text - black
+                "lt1":     "FFFFFF",   # Slide background - white
                 "dk2":     "00053E",   # Deepest navy
-                "lt2":     "FFC72C",   # Bright gold — decorative/line use only
-                "accent1": "003865",   # ETSU Blue          contrast ~8.5:1 ✓
-                "accent2": "005A9E",   # Medium blue        contrast ~6.1:1 ✓
-                "accent3": "7A6000",   # Dark amber/bronze  contrast ~7.2:1 ✓ (warm without being yellow)
-                "accent4": "00053E",   # Deep navy repeat   contrast ~16:1  ✓
-                "accent5": "1A5276",   # Steel blue         contrast ~7.8:1 ✓
-                "accent6": "4A4A4A",   # Charcoal           contrast ~9.7:1 ✓
+                "lt2":     "FFC72C",   # Bright gold - decorative/line use only
+                "accent1": "003865",   # ETSU Blue          contrast ~8.5:1
+                "accent2": "005A9E",   # Medium blue        contrast ~6.1:1
+                "accent3": "7A6000",   # Dark amber/bronze  contrast ~7.2:1
+                "accent4": "00053E",   # Deep navy repeat   contrast ~16:1
+                "accent5": "1A5276",   # Steel blue         contrast ~7.8:1
+                "accent6": "4A4A4A",   # Charcoal           contrast ~9.7:1
                 "hlink":   "003865",   # Hyperlinks in ETSU blue
             }
     """
@@ -125,7 +120,7 @@ class SlidesBuilder:
         self.theme_colors        = theme_colors
         self._prs                = None
 
-    # ── Public entry point ─────────────────────────────────────────────────────
+    # -- Public entry point -----------------------------------------------------
 
     def build(self) -> None:
         """Parse the Markdown and write the .pptx file."""
@@ -139,9 +134,9 @@ class SlidesBuilder:
             else:
                 self._add_content_slide(slide_data)
         self._prs.save(self.output_path)
-        print(f"Presentation saved → {self.output_path}")
+        print(f"Presentation saved --> {self.output_path}")
 
-    # ── Markdown parsing ───────────────────────────────────────────────────────
+    # -- Markdown parsing -------------------------------------------------------
 
     def _parse_markdown(self) -> list:
         """
@@ -153,7 +148,7 @@ class SlidesBuilder:
         for raw_line in self.markdown.splitlines():
             line = raw_line.rstrip()
 
-            # ── # Heading → title slide ───────────────────────────────────────
+            # -- # Heading --> title slide ---------------------------------------
             if re.match(r'^#\s+', line) and not re.match(r'^##', line):
                 text = re.sub(r'^#\s+', '', line).strip()
                 if ':' in text:
@@ -167,19 +162,19 @@ class SlidesBuilder:
                     current = SlideData(kind=SlideData.TITLE_SLIDE, title=text)
                 slides.append(current)
 
-            # ── ## Heading → content slide ────────────────────────────────────
+            # -- ## Heading --> content slide ------------------------------------
             elif re.match(r'^##\s+', line):
                 title   = re.sub(r'^##\s+', '', line).strip()
                 current = SlideData(kind=SlideData.CONTENT_SLIDE, title=title)
                 slides.append(current)
 
-            # ── - Bullet item ─────────────────────────────────────────────────
+            # -- - Bullet item -------------------------------------------------
             elif re.match(r'^-\s+', line):
                 if current and current.kind == SlideData.CONTENT_SLIDE:
                     text = re.sub(r'^-\s+', '', line).strip()
                     current.items.append(SlideItem(kind=SlideItem.BULLET, text=text))
 
-            # ── 1. Numbered item ──────────────────────────────────────────────
+            # -- 1. Numbered item ----------------------------------------------
             elif re.match(r'^\d+\.\s+', line):
                 if current and current.kind == SlideData.CONTENT_SLIDE:
                     m = re.match(r'^(\d+)\.\s+(.*)', line)
@@ -190,7 +185,7 @@ class SlidesBuilder:
                             SlideItem(kind=SlideItem.NUMBERED, text=text, number=number)
                         )
 
-            # ── Plain paragraph ───────────────────────────────────────────────
+            # -- Plain paragraph -----------------------------------------------
             elif line.strip():
                 if current and current.kind == SlideData.CONTENT_SLIDE:
                     current.items.append(
@@ -199,7 +194,7 @@ class SlidesBuilder:
 
         return slides
 
-    # ── Presentation initialisation ────────────────────────────────────────────
+    # -- Presentation initialisation --------------------------------------------
 
     def _init_presentation(self) -> Presentation:
         prs = Presentation()
@@ -207,7 +202,7 @@ class SlidesBuilder:
         prs.slide_height = Inches(self.slide_height_inches)
         return prs
 
-    # ── Slide creation ─────────────────────────────────────────────────────────
+    # -- Slide creation ---------------------------------------------------------
 
     def _add_title_slide(self, data: SlideData) -> None:
         layout = self._prs.slide_layouts[_LAYOUT_TITLE_SLIDE]
@@ -238,19 +233,17 @@ class SlidesBuilder:
 
         for item in data.items:
             if item.kind == SlideItem.BULLET:
-                self._add_paragraph(content_shape, item.text)   # keep native bullet
+                self._add_paragraph(content_shape, item.text)
             elif item.kind == SlideItem.PLAIN:
                 p = self._add_paragraph(content_shape, item.text)
                 self._remove_bullet(p)
             elif item.kind == SlideItem.NUMBERED:
-                # "N.\u2002 Text"  ← en-space gives a slightly wider gap than a
-                # regular space, mimicking PowerPoint's own numbered list style.
                 display = f"{item.number}.\u2002 {item.text}"
                 p = self._add_paragraph(content_shape, display)
                 self._remove_bullet(p)
                 self._apply_hanging_indent(p)
 
-    # ── Theme helpers ─────────────────────────────────────────────────────────
+    # -- Theme helpers ----------------------------------------------------------
 
     def _apply_theme_colors(self, color_map: dict) -> None:
         """
@@ -259,19 +252,9 @@ class SlidesBuilder:
         python-pptx exposes the theme as a generic blob-based Part with no
         high-level API, so we parse the XML directly, mutate the clrScheme
         element, then write the serialized bytes back to the part.
-
-        Each key in color_map must be a valid Office theme slot name; each
-        value is a 6-character hex string without a leading '#'.  Only the
-        supplied slots are modified — everything else is left as-is.
-
-        Valid slot names:
-            dk1, lt1, dk2, lt2,
-            accent1, accent2, accent3, accent4, accent5, accent6,
-            hlink, folHlink
         """
         ns = 'http://schemas.openxmlformats.org/drawingml/2006/main'
 
-        # The theme lives as a relationship off the slide master part
         master_part = self._prs.slide_master.part
         theme_part = next(
             rel.target_part
@@ -288,18 +271,15 @@ class SlidesBuilder:
             slot = clr_scheme.find(f'{{{ns}}}{slot_name}')
             if slot is None:
                 continue
-            # Replace whatever child is there (sysClr or srgbClr) with srgbClr
             for child in list(slot):
                 slot.remove(child)
             etree.SubElement(slot, f'{{{ns}}}srgbClr', val=hex_color)
 
-        # Write the modified XML back to the part blob
         theme_part._blob = etree.tostring(
             tree, xml_declaration=True, encoding='UTF-8', standalone=True
         )
 
-    # ── Shape / text-frame helpers ─────────────────────────────────────────────
-
+    # -- Shape / text-frame helpers ---------------------------------------------
 
     def _scale_shape(
         self,
@@ -309,10 +289,6 @@ class SlidesBuilder:
         margin_right: int   = 10,
         autosize:     bool  = False,
     ) -> None:
-        """
-        Resize a placeholder to the given width (inches) while preserving its
-        original left / top / height so the slide layout isn't disturbed.
-        """
         left   = shape.left
         top    = shape.top
         height = shape.height
@@ -361,11 +337,6 @@ class SlidesBuilder:
         """
         Strip all bullet / list formatting from a paragraph by injecting
         <a:buNone/> into the paragraph-properties XML element.
-
-        Also explicitly zeros out marL and indent so the paragraph does not
-        inherit hanging-indent values from the slide layout's default lstStyle.
-        Without this, plain-text paragraphs can appear indented due to layout
-        defaults bleeding through even when no indent was set on the paragraph.
         """
         ns   = 'http://schemas.openxmlformats.org/drawingml/2006/main'
         pPr  = paragraph._p.get_or_add_pPr()
@@ -378,7 +349,6 @@ class SlidesBuilder:
             if existing is not None:
                 pPr.remove(existing)
         etree.SubElement(pPr, f'{{{ns}}}buNone')
-        # Explicitly zero indentation so layout defaults cannot bleed through
         pPr.set('marL',   '0')
         pPr.set('indent', '0')
 
@@ -387,41 +357,8 @@ class SlidesBuilder:
         """
         Give a paragraph a hanging indent so wrapped lines align under the
         text rather than the number label.
-
-        marL  = total left indent from the text-box edge
-        indent = negative value pulls the first line back to the left
-        Net effect: first line starts at 0, continuation lines indent by
-        `indent_inches`.
         """
         indent_emu = Inches(indent_inches)
         pPr = paragraph._p.get_or_add_pPr()
         pPr.set('marL',   str(indent_emu))
         pPr.set('indent', str(-indent_emu))
-
-
-# ── CLI entry point ────────────────────────────────────────────────────────────
-
-if __name__ == '__main__':
-    if len(sys.argv) != 3:
-        print("Usage: python slides_builder.py <input.md> <output.pptx>")
-        sys.exit(1)
-
-    md_path, out_path = sys.argv[1], sys.argv[2]
-    with open(md_path, 'r', encoding='utf-8') as fh:
-        markdown_text = fh.read()
-
-    etsu_colors = {
-        "dk1":     "000000",   # Body text — black
-        "lt1":     "FFFFFF",   # Slide background — white
-        "dk2":     "00053E",   # Deepest navy
-        "lt2":     "FFC72C",   # Bright gold — decorative/line use only
-        "accent1": "003865",   # ETSU Blue          contrast ~8.5:1 ✓
-        "accent2": "005A9E",   # Medium blue        contrast ~6.1:1 ✓
-        "accent3": "7A6000",   # Dark amber/bronze  contrast ~7.2:1 ✓ (warm without being yellow)
-        "accent4": "00053E",   # Deep navy repeat   contrast ~16:1  ✓
-        "accent5": "1A5276",   # Steel blue         contrast ~7.8:1 ✓
-        "accent6": "4A4A4A",   # Charcoal           contrast ~9.7:1 ✓
-        "hlink":   "003865",   # Hyperlinks in ETSU blue
-    }
-
-    SlidesBuilder(markdown_text, out_path, theme_colors=etsu_colors).build()
